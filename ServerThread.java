@@ -20,6 +20,12 @@ public class ServerThread extends Thread {
     @Override
     public void run() {
         try {
+
+            if(playerID==1) {
+                os = this.socket.getOutputStream();
+                os.write("Start".getBytes());
+            }
+
             String clientNum = "0";
             while(true){
                 is = socket.getInputStream();
