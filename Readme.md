@@ -1,1 +1,1 @@
-#Shiritori framework
+#Shiritori
