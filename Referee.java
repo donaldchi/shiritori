@@ -7,7 +7,9 @@
 
 import java.io.IOException;
 import java.net.SocketException;
+import java.net.BindException;
 import java.net.ServerSocket;
+
 import java.net.Socket;
 import java.util.ArrayList;
 
@@ -16,9 +18,19 @@ public class Referee {
     private static ServerSocket referee;
     private static boolean isGameOver = false; 
     private static ArrayList<Socket> players = new ArrayList<Socket>();
+    public static String word = null;
+    public static int activePlayerID = 0;
 
-    public Referee() throws IOException {
-        referee = new ServerSocket(9999);
+    public Referee() {
+        try {
+            //only two players can be connectable
+            referee = new ServerSocket(9995, 2); 
+        } catch (BindException e) {
+            // e.printStackTrace();
+            System.exit(1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void waitPlayer(){
@@ -40,7 +52,7 @@ public class Referee {
         }
     }
 
-    public static void showJudgementResult(String word, String playerStr) {
+    synchronized public static void showJudgementResult(String word, String playerStr) {
         if(playerStr != null && !isGameOver) {
             //最初に二人のプレイヤが揃える前に送った単語は無視する。
             if(word.equals(" ") || !Shiritori.dict.contains(word)) {
@@ -53,12 +65,18 @@ public class Referee {
         }
     }
 
-    public static boolean isGameOver() {
+    synchronized public static boolean isGameOver() {
         return isGameOver;
     }
 
     public static void gameOver() {
-        System.exit(1);
+        try {
+            referee.close();
+            System.exit(1);
+        } catch (IOException e) {
+            System.out.println("Errors occured when closing Socket or ServerSocket!");
+            e.printStackTrace();
+        }
     }
 }
 

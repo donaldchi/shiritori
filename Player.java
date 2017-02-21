@@ -5,6 +5,7 @@
 
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.net.ConnectException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -15,9 +16,12 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
-public class Player {
+abstract class Player {
 	public static String word = null; //受け取る、言い出す単語
-    public static ArrayList<String> dict;
+    public static ArrayList<String> dict; //単語辞書
+    public static String startWord = null;
+
+    private static Socket socket;
 
     public static String getShiritoriWord(String inputWord){
         dict.remove(inputWord);
@@ -34,18 +38,31 @@ public class Player {
         return " ";
     }
 
-    public static void main(String[] args) throws UnknownHostException, IOException {
-        if(args.length<0) {
-            System.out.println("Please insert word dictionary!");
-            System.exit(1);
-        }
+    //単語辞書の初期化を行う
+    abstract public void setDict(ArrayList<String> dict);
 
-        dict = new ArrayList<String>(Arrays.asList(args));
+    //最初の単語を指定する
+    abstract public void setStartWord(String word);
 
-        Socket socket = new Socket("127.0.0.1",9999);
-        int playerID = 0;
-        
+    //審判となるサーバーのアドレスとポート番号を設定
+    public static void configRefereeInfo(String refereeIP, int refereePort) {
+        try {
+            if(refereeIP==null) {
+                socket = new Socket("127.0.0.1", 9995);
+            } else {
+                socket = new Socket(refereeIP,refereePort);
+            }
+        } catch (ConnectException e) {
+            e.printStackTrace();
+        } catch (UnknownHostException e){
+            e.printStackTrace();
+        } catch (IOException e){
+            e.printStackTrace();
+        } 
+    }
+
+    public static void joinGame() {
         new WordSender(socket).start();
-        new WordReceiver(socket, playerID).start();
+        new WordReceiver(socket, 0).start();
     }
 }

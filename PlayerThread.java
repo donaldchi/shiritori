@@ -24,36 +24,48 @@ public class PlayerThread extends Thread {
 
     @Override
     public void run() {
+
+        InputStream is = null;
+        OutputStream os = null;
+
         try {
 
             String word = null, playerStr = null;
-            InputStream is;
-            OutputStream os;
             byte[] b = new byte[1024];
+
+            // //ゲーム始めのサインを一番のプレイヤに送る
+            //     word = this.playerID==0 ? "0" : "1";
+            //     os = this.player.getOutputStream();
+            //     os.write(word.getBytes());
 
             while(true){
                                 
                 if(Referee.isGameOver()) {
+                    this.player.close();
                     Referee.gameOver();
-                }
+                }   
+                    synchronized(this) {
+                        is = player.getInputStream();
+                        word = new String(b, 0 , is.read(b));
+                        for(Socket toPlayer: players){
+                            if(this.player != toPlayer){  
+                                os = toPlayer.getOutputStream();
+                                os.write(word.getBytes());
+                                playerStr = (this.playerID==0) ? "SECOND" : "FIRST";
+                            }
+                        }
 
-                is = player.getInputStream();
-                word = new String(b, 0 , is.read(b));
-                
-                for(Socket toPlayer: players){
-                    if(this.player != toPlayer){  
-                        os = toPlayer.getOutputStream();
-                        os.write(word.getBytes());
-                        playerStr = (this.playerID==0) ? "SECOND" : "FIRST";
+                        Referee.showJudgementResult(word, playerStr);
                     }
-                }
-
-                Referee.showJudgementResult(word, playerStr);
-                
             }            
         } catch (SocketException e) {
-            System.out.println("SocketException");
-            e.printStackTrace();
+            try{
+                this.player.close();
+                is.close();
+                os.close();
+            }catch(Exception ee){}
+
+            // e.printStackTrace();
         } catch (IOException e) {
             System.out.println("IOException");
             e.printStackTrace();

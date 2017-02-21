@@ -15,37 +15,39 @@ import java.io.BufferedReader;
 class WordReceiver extends Thread {
 
     private final Socket socket;
-    private final int playerID;
+    private final int startPlayerID;
 
-    public WordReceiver(Socket socket, int playerID) {
+    public WordReceiver(Socket socket, int startPlayerID) {
         this.socket = socket;
-        this.playerID = playerID;
+        this.startPlayerID = startPlayerID;
     }
 
     @Override
     public void run() {
         try {
-
-            Player.word = this.playerID==0 ? "start" : null;//player0が先に単語を言い出す
             byte[] b = new byte[1024];
             InputStream is;
             String word;
 
             while(true){
+                synchronized(this) {
+                    if(Player.word==null) {
+                        is = socket.getInputStream();
+                        word = new String(b, 0, is.read(b));
+                        word = Player.getShiritoriWord(word);
 
-                is = socket.getInputStream();
-                word = new String(b, 0, is.read(b));
-                word = Player.getShiritoriWord(word);
-                Player.word = word;
+                        Player.word = word;
 
-            if(word.equals(" ")) {
-                System.exit(1);
-                // break;
-            }
+                        this.notify();
+
+                        if(word.equals(" ")) {
+                            System.exit(1);
+                        }
+                    }
+                }
 
             }
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         } finally {
             System.exit(1);
