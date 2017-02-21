@@ -15,7 +15,7 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
-public class Player {
+public class AI {
 	public static String word = null; //受け取る、言い出す単語
     public static ArrayList<String> dict;
 
